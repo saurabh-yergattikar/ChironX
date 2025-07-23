@@ -54,12 +54,18 @@ async function handleVideoUpload(file) {
         progressBarInner.style.width = '100%';
         setTimeout(() => progressBar.style.display = 'none', 500);
         appendLog('Analysis complete!');
-        // Show results
-        showResults(data);
-        // Play audio feedback
-        if (data.audio_url) playAudio('http://localhost:5001' + data.audio_url);
-        // Show logs
-        if (data.logs) data.logs.forEach(appendLog);
+        // Show prompt to play video for feedback
+        appendLog('<b>Watch your performance. Feedback will appear after the video finishes playing.</b>');
+        results.style.display = 'none';
+        audioPlayer.style.display = 'none';
+        // Remove any previous event listeners
+        videoPreview.onended = null;
+        // When video ends, show feedback/results and play audio
+        videoPreview.onended = () => {
+            showResults(data);
+            if (data.audio_url) playAudio('http://localhost:5001' + data.audio_url);
+            appendLog('<b>Your feedback is ready below!</b>');
+        };
     } catch (err) {
         progressBar.style.display = 'none';
         showToast('Error: ' + err.message, true);
