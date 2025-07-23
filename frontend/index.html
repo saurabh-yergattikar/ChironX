@@ -3,21 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <title>ChironX</title>
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        #log { background: #f4f4f4; padding: 1em; margin-top: 1em; height: 150px; overflow-y: auto; }
-        #overlay { border: 1px solid #ccc; margin-top: 1em; }
+        :root {
+            --primary: #4f8cff;
+            --secondary: #f4f7fb;
+            --accent: #ffb74d;
+            --success: #43a047;
+            --error: #e53935;
+            --card-bg: #fff;
+            --shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: var(--secondary);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            border-radius: 18px;
+            padding: 2.5em 2em 2em 2em;
+            margin-top: 3em;
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 0.5em;
+            display: flex;
+            align-items: center;
+            gap: 0.3em;
+        }
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            background: #eaf1fb;
+            padding: 1.5em 1em;
+            text-align: center;
+            margin-bottom: 1.5em;
+            transition: border-color 0.2s;
+            cursor: pointer;
+            width: 100%;
+        }
+        .upload-area.dragover {
+            border-color: var(--accent);
+        }
+        .upload-area input[type="file"] {
+            display: none;
+        }
+        .actions {
+            display: flex;
+            gap: 1em;
+            margin-bottom: 1.5em;
+        }
+        .btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7em 1.5em;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .video-section {
+            width: 100%;
+            margin-bottom: 1.5em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #videoPreview {
+            width: 100%;
+            max-width: 480px;
+            border-radius: 10px;
+            margin-bottom: 0.5em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: none;
+        }
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 1.2em;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.4s;
+        }
+        .results {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2em;
+            margin-bottom: 1.5em;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 1.2em 1em;
+            display: flex;
+            align-items: flex-start;
+            gap: 1em;
+            animation: fadeIn 0.7s;
+        }
+        .card .material-icons {
+            font-size: 2.1em;
+            color: var(--primary);
+            margin-right: 0.5em;
+        }
+        .card-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 0.2em;
+        }
+        .card-content {
+            font-size: 1em;
+        }
+        .audio-player {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 1em;
+            margin-bottom: 1.5em;
+        }
+        #feedbackAudio {
+            width: 100%;
+            outline: none;
+        }
+        .log {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1em;
+            font-size: 0.98em;
+            color: #444;
+            max-height: 120px;
+            overflow-y: auto;
+            margin-bottom: 1.5em;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 1em 0.5em; }
+            #videoPreview, .results, .audio-player { max-width: 100vw; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: none; }
+        }
     </style>
 </head>
 <body>
-    <h1>ChironX</h1>
-    <input type="file" id="videoUpload" accept="video/*">
-    <button id="startLive">Start Live Mode</button>
-    <br><br>
-    <video id="videoPreview" width="480" controls style="display:none;"></video>
-    <audio id="feedbackAudio" controls></audio>
-    <div id="log"></div>
-    <canvas id="overlay" width="480" height="360"></canvas>
+    <div class="container">
+        <div class="logo"><span class="material-icons">music_note</span> ChironX</div>
+        <label class="upload-area" id="uploadArea">
+            <span class="material-icons" style="font-size:1.5em;vertical-align:middle;">cloud_upload</span>
+            <span style="display:block;margin-top:0.5em;">Click or drag a video file here to analyze your guitar playing</span>
+            <input type="file" id="videoUpload" accept="video/*">
+        </label>
+        <div class="actions">
+            <button class="btn" id="startLive"><span class="material-icons" style="vertical-align:middle;">videocam</span> Start Live Mode</button>
+        </div>
+        <div class="video-section">
+            <video id="videoPreview" controls></video>
+        </div>
+        <div class="progress" id="progressBar"><div class="progress-bar" id="progressBarInner"></div></div>
+        <div class="results" id="results" style="display:none;"></div>
+        <div class="audio-player" id="audioPlayer" style="display:none;">
+            <span class="material-icons">volume_up</span>
+            <audio id="feedbackAudio" controls></audio>
+        </div>
+        <div class="log" id="log"></div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html> 
