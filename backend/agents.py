@@ -4,10 +4,11 @@ import google.generativeai as genai
 from google.cloud import firestore  # For Firebase
 from google.cloud import storage  # For Firebase Storage if needed
 import analysis
+import os
+import uuid
 
 # --- Google Cloud Service Initialization ---
-# Uncomment and fill in your credentials/project info:
-# genai.configure(api_key='YOUR_API_KEY')
+genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 # aiplatform.init(project='YOUR_PROJECT_ID')
 # db = firestore.Client()
 # storage_client = storage.Client()
@@ -27,33 +28,44 @@ def statistician(metrics):
     # db.collection('sessions').add({'user_id': 'anon', 'errors': errors, 'improvement': improvement})
     return {"errors": errors, "improvement": improvement}
 
-def coach(stats):
-    """Generate motivational feedback and drill suggestion."""
-    # TODO: Use Gemini to generate feedback text and drill
-    # Placeholder prompt/response
-    feedback_text = f"Great try! You made {stats.get('improvement', 0)}% progress. Continue on your fretting."
-    drill = "E|-----0-----|"
-    navigate_skills = stats.get('errors', 0) > 2  # Suggest navigation if many errors
+def coach(stats, metrics):
+    """Generate motivational feedback and drill suggestion based on analysis results."""
+    chord = metrics.get('chord', 'unknown')
+    flaws = metrics.get('flaws', [])
+    accuracy = metrics.get('accuracy', 0)
+    if chord == 'indeterminate' or accuracy == 0:
+        feedback_text = "No guitar detected or unable to analyze your playing. Please try again with a clear view of your guitar."
+    else:
+        feedback_text = f"Nice work on the {chord} chord! "
+        if flaws:
+            feedback_text += "Areas to improve: " + '; '.join(flaws) + ". "
+        feedback_text += f"You made {accuracy}% progress. Keep practicing!"
+    drill = "E|-----0-----|"  # You can make this dynamic if desired
+    navigate_skills = stats.get('errors', 0) > 2
     return {"feedback_text": feedback_text, "drill": drill, "navigate_skills": navigate_skills}
 
 def automator(coach_output):
     """Convert feedback to TTS audio, upload to Firebase Storage, return audio URL."""
-    # Use TTS to synthesize speech
     client = tts.TextToSpeechClient()
-    synthesis_input = tts.SynthesisInput(text=coach_output['feedback_text'])
-    voice = tts.VoiceSelectionParams(language_code="en-US", name="en-US-Wavenet-D")
-    audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.MP3)
-    response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
-    # Save to local file (for demo; in prod, upload to Firebase Storage)
-    audio_path = 'feedback.mp3'
-    with open(audio_path, 'wb') as out:
+    # Use SSML for more natural speech
+    ssml_text = f"<speak>{coach_output['feedback_text']}</speak>"
+    synthesis_input = tts.SynthesisInput(ssml=ssml_text)
+    voice = tts.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Neural2-D"  # US English, male, neural
+    )
+    audio_config = tts.AudioConfig(
+        audio_encoding=tts.AudioEncoding.MP3,
+        speaking_rate=1.05,  # Slightly faster
+        pitch=2.0            # Slightly higher pitch
+    )
+    response = client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
+    audio_filename = f'feedback_{uuid.uuid4().hex}.mp3'
+    with open(audio_filename, 'wb') as out:
         out.write(response.audio_content)
-    # TODO: Upload to Firebase Storage and get public URL
-    # bucket = storage_client.bucket('YOUR_BUCKET_NAME')
-    # blob = bucket.blob('feedback.mp3')
-    # blob.upload_from_filename(audio_path)
-    # audio_url = blob.public_url
-    audio_url = '/feedback.mp3'  # Placeholder for local demo
+    audio_url = f'/feedback/{audio_filename}'
     return {"audio_url": audio_url}
 
 # --- Main Handler: Orchestrate Agent Chain ---
@@ -61,7 +73,7 @@ def handle_input(input_data):
     """Full agentic workflow: analyze -> stats -> coach -> TTS/audio."""
     metrics = analyzer(input_data)
     stats = statistician(metrics)
-    coach_out = coach(stats)
+    coach_out = coach(stats, metrics)
     tts_out = automator(coach_out)
     # Collect agent thoughts/logs for frontend
     logs = [

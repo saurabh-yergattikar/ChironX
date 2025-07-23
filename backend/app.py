@@ -24,5 +24,9 @@ def serve_audio():
     # Serve the generated audio file for demo
     return send_from_directory('.', 'feedback.mp3')
 
+@app.route('/feedback/<filename>')
+def serve_dynamic_audio(filename):
+    return send_from_directory('.', filename)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True) 
