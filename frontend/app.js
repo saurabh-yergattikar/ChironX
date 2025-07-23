@@ -92,13 +92,100 @@ function showResults(data) {
     results.innerHTML = '';
     results.style.display = 'flex';
     // Analyzer Card
-    if (data.metrics) results.appendChild(makeCard('Analyzer', 'psychology', `Chord: <b>${data.metrics.chord || '-'}</b><br>Accuracy: <b>${data.metrics.accuracy || '-'}%</b><br>${data.metrics.flaws && data.metrics.flaws.length ? 'Flaws:<ul>' + data.metrics.flaws.map(f=>`<li>${f}</li>`).join('') + '</ul>' : ''}`));
-    // Statistician Card
-    if (data.stats) results.appendChild(makeCard('Statistician', 'bar_chart', `Errors: <b>${data.stats.errors}</b><br>Improvement: <b>${data.stats.improvement}%</b>`));
+    if (data.metrics) {
+        const flaws = data.metrics.flaws || [];
+        let flawHtml = '';
+        if (Array.isArray(flaws) && flaws.length && typeof flaws[0] === 'object') {
+            flawHtml = '<ul style="margin:0 0 0 1em;padding:0;">' + flaws.map(f =>
+                `<li style="margin-bottom:0.7em;">
+                    <b>${f.description || ''}</b><br>
+                    <span style='color:#e67e22;'>${f.reason || ''}</span><br>
+                    <span style='color:#43a047;'>Tip: ${f.tip || ''}</span><br>
+                    ${(typeof f.timestamp === 'number' && !isNaN(f.timestamp)) ? `<span style='color:#4f8cff;'>At ${formatTime(f.timestamp)}</span><br>` : ''}
+                </li>`
+            ).join('') + '</ul>';
+        } else if (Array.isArray(flaws) && flaws.length) {
+            flawHtml = '<ul>' + flaws.map(f => `<li>${f}</li>`).join('') + '</ul>';
+        }
+        results.appendChild(makeCard('Analyzer', 'psychology', `Chord: <b>${data.metrics.chord || '-'}</b><br>Accuracy: <b>${data.metrics.accuracy || '-'}%</b><br>${flawHtml}`));
+    }
     // Coach Card
-    if (data.coach) results.appendChild(makeCard('Coach', 'emoji_events', `${data.coach.feedback_text}<br><b>Drill:</b> <code>${data.coach.drill}</code>`));
+    if (data.coach) results.appendChild(makeCard('Coach', 'emoji_events', `${data.coach.feedback_text}<br><b>Drill:</b> <code>${data.coach.drill}</code><br><span style='color:#4f8cff;'>${data.metrics && data.metrics.drill_context ? data.metrics.drill_context : ''}</span>`));
     // Automator Card
     if (data.audio_url) results.appendChild(makeCard('Automator', 'volume_up', `Audio feedback ready! <span style="color:var(--primary)">Press play below.</span>`));
+
+    // Progress History Chart
+    // Audio Waveform with Flaw Highlights
+    if (data.audio_url && data.metrics && Array.isArray(data.metrics.flaws)) {
+        showWaveform('http://localhost:5001' + data.audio_url, data.metrics.flaws);
+    }
+}
+
+function formatTime(seconds) {
+    if (typeof seconds !== 'number') return '';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function showProgressChart(history) {
+    const chartEl = document.getElementById('progressChart');
+    chartEl.style.display = 'block';
+    if (window._progressChart) window._progressChart.destroy();
+    window._progressChart = new Chart(chartEl.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: history.map((_, i) => `Session ${i + 1}`),
+            datasets: [{
+                label: 'Accuracy',
+                data: history,
+                borderColor: '#4f8cff',
+                backgroundColor: 'rgba(79,140,255,0.08)',
+                tension: 0.3,
+                pointRadius: 5,
+                pointBackgroundColor: '#ffb74d',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { min: 0, max: 100, ticks: { stepSize: 20 } } }
+        }
+    });
+}
+
+function showWaveform(audioUrl, flaws) {
+    const waveformDiv = document.getElementById('waveform');
+    waveformDiv.style.display = 'block';
+    waveformDiv.innerHTML = '';
+    if (window._wavesurfer) { window._wavesurfer.destroy(); window._wavesurfer = null; }
+    const ws = WaveSurfer.create({
+        container: waveformDiv,
+        waveColor: '#b3cfff',
+        progressColor: '#4f8cff',
+        height: 60,
+        barWidth: 2,
+        responsive: true
+    });
+    window._wavesurfer = ws;
+    ws.load(audioUrl);
+    ws.on('ready', () => {
+        // Highlight flaw regions
+        if (Array.isArray(flaws)) {
+            flaws.forEach(f => {
+                if (f.timestamp !== undefined && !isNaN(f.timestamp)) {
+                    ws.addRegion({
+                        start: Math.max(0, f.timestamp - 0.5),
+                        end: f.timestamp + 0.5,
+                        color: 'rgba(229,57,53,0.25)',
+                        drag: false,
+                        resize: false
+                    });
+                }
+            });
+        }
+    });
 }
 
 function makeCard(title, icon, content) {

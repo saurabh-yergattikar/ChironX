@@ -195,8 +195,13 @@
             <span class="material-icons">volume_up</span>
             <audio id="feedbackAudio" controls></audio>
         </div>
+        <div id="waveform" style="width:100%;margin-bottom:1.5em;display:none;"></div>
+        <canvas id="progressChart" style="width:100%;max-width:480px;margin-bottom:1.5em;display:none;"></canvas>
         <div class="log" id="log"></div>
     </div>
     <script src="app.js"></script>
+    <!-- Add WaveSurfer.js and Chart.js for waveform and progress chart -->
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html> 

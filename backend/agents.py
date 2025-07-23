@@ -38,7 +38,10 @@ def coach(stats, metrics):
     else:
         feedback_text = f"Nice work on the {chord} chord! "
         if flaws:
-            feedback_text += "Areas to improve: " + '; '.join(flaws) + ". "
+            if isinstance(flaws[0], dict):
+                feedback_text += "Areas to improve: " + '; '.join(f.get('description', '') for f in flaws) + ". "
+            else:
+                feedback_text += "Areas to improve: " + '; '.join(flaws) + ". "
         feedback_text += f"You made {accuracy}% progress. Keep practicing!"
     drill = "E|-----0-----|"  # You can make this dynamic if desired
     navigate_skills = stats.get('errors', 0) > 2
