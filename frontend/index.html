@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChironX</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        #log { background: #f4f4f4; padding: 1em; margin-top: 1em; height: 150px; overflow-y: auto; }
+        #overlay { border: 1px solid #ccc; margin-top: 1em; }
+    </style>
+</head>
+<body>
+    <h1>ChironX</h1>
+    <input type="file" id="videoUpload" accept="video/*">
+    <button id="startLive">Start Live Mode</button>
+    <br><br>
+    <video id="videoPreview" width="480" controls style="display:none;"></video>
+    <audio id="feedbackAudio" controls></audio>
+    <div id="log"></div>
+    <canvas id="overlay" width="480" height="360"></canvas>
+    <script src="app.js"></script>
+</body>
+</html> 
