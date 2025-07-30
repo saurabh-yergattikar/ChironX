@@ -1,6 +1,7 @@
-// --- Drag & Drop Upload ---
-const uploadArea = document.getElementById('uploadArea');
+// --- Simple File Upload ---
 const videoUpload = document.getElementById('videoUpload');
+const selectFileBtn = document.getElementById('selectFile');
+const uploadArea = document.getElementById('uploadArea');
 const videoPreview = document.getElementById('videoPreview');
 const progressBar = document.getElementById('progressBar');
 const progressBarInner = document.getElementById('progressBarInner');
@@ -9,67 +10,112 @@ const audioPlayer = document.getElementById('audioPlayer');
 const feedbackAudio = document.getElementById('feedbackAudio');
 const log = document.getElementById('log');
 
-// Drag & drop events
+// Simple button click to open file dialog
+selectFileBtn.addEventListener('click', () => {
+    console.log('Select file button clicked');
+    videoUpload.click();
+});
+
+// File input change handler
+videoUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        console.log('File selected:', file.name);
+        handleVideoUpload(file);
+    }
+});
+
+// Drag and drop for the upload area
 uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
     uploadArea.classList.add('dragover');
 });
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
 uploadArea.addEventListener('drop', (e) => {
     e.preventDefault();
     uploadArea.classList.remove('dragover');
-    if (e.dataTransfer.files.length) {
-        videoUpload.files = e.dataTransfer.files;
-        handleVideoUpload(e.dataTransfer.files[0]);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        console.log('File dropped:', files[0].name);
+        handleVideoUpload(files[0]);
     }
-});
-uploadArea.addEventListener('click', () => videoUpload.click());
-videoUpload.addEventListener('change', (e) => {
-    if (e.target.files[0]) handleVideoUpload(e.target.files[0]);
 });
 
 async function handleVideoUpload(file) {
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+        showToast('Please select a video file!', true);
+        return;
+    }
+    
     // Reset UI
     results.style.display = 'none';
     audioPlayer.style.display = 'none';
     log.innerHTML = '';
     progressBar.style.display = 'block';
     progressBarInner.style.width = '10%';
+    
     // Show video preview
     videoPreview.src = URL.createObjectURL(file);
     videoPreview.style.display = 'block';
+    
     // Prepare form data
     const formData = new FormData();
     formData.append('video', file);
-    appendLog('Uploading video...');
+    appendLog(`📤 Uploading video: ${file.name}...`);
+    
     try {
-        progressBarInner.style.width = '40%';
+        // Upload phase
+        progressBarInner.style.width = '30%';
+        appendLog('🔍 Analyzing video with AI...');
+        
         const res = await fetch('http://localhost:5001/analyze', {
             method: 'POST',
             body: formData
         });
+        
         progressBarInner.style.width = '70%';
-        if (!res.ok) throw new Error('Backend error');
+        appendLog('🎵 Generating audio feedback...');
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Backend error: ${res.status} - ${errorText}`);
+        }
+        
         const data = await res.json();
         progressBarInner.style.width = '100%';
+        appendLog('✅ Analysis complete!');
+        
         setTimeout(() => progressBar.style.display = 'none', 500);
-        appendLog('Analysis complete!');
+        
         // Show prompt to play video for feedback
-        appendLog('<b>Watch your performance. Feedback will appear after the video finishes playing.</b>');
+        appendLog('<b>🎬 Watch your performance. Feedback will appear after the video finishes playing.</b>');
         results.style.display = 'none';
         audioPlayer.style.display = 'none';
+        
         // Remove any previous event listeners
         videoPreview.onended = null;
+        
         // When video ends, show feedback/results and play audio
         videoPreview.onended = () => {
             showResults(data);
-            if (data.audio_url) playAudio('http://localhost:5001' + data.audio_url);
-            appendLog('<b>Your feedback is ready below!</b>');
+            if (data.audio_url) {
+                appendLog('🔊 Playing audio feedback...');
+                playAudio('http://localhost:5001' + data.audio_url);
+            }
+            appendLog('<b>🎯 Your feedback is ready below!</b>');
         };
+        
     } catch (err) {
         progressBar.style.display = 'none';
         showToast('Error: ' + err.message, true);
-        appendLog('Error: ' + err.message);
+        appendLog('❌ Error: ' + err.message);
+        console.error('Upload error:', err);
     }
 }
 

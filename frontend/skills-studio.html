@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills Studio - AI Coaching Platform</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f8cff;
+            --accent: #ff6b6b;
+            --success: #51cf66;
+            --error: #ff6b6b;
+            --card-bg: #ffffff;
+            --bg: #f8fafc;
+            --text: #1a202c;
+            --text-secondary: #64748b;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3em;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5em;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            margin-bottom: 2em;
+        }
+        
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5em;
+            margin-bottom: 3em;
+        }
+        
+        .skill-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2em;
+            text-align: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary);
+        }
+        
+        .skill-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), #6ba3ff);
+            color: white;
+        }
+        
+        .skill-card .material-icons {
+            font-size: 3em;
+            margin-bottom: 1em;
+            color: var(--primary);
+        }
+        
+        .skill-card.selected .material-icons {
+            color: white;
+        }
+        
+        .skill-card h3 {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 0.5em;
+        }
+        
+        .skill-card p {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        
+        .skill-card.selected p {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .upload-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2em;
+            box-shadow: var(--shadow);
+            margin-bottom: 2em;
+            text-align: center;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 3em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            background: rgba(79, 140, 255, 0.05);
+        }
+        
+        .upload-area input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1em 2em;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .btn:hover {
+            background: #3d7bff;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2em;
+            box-shadow: var(--shadow);
+            margin-top: 2em;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1em 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.4s;
+        }
+        
+        .skill-categories {
+            display: flex;
+            justify-content: center;
+            gap: 1em;
+            margin-bottom: 2em;
+            flex-wrap: wrap;
+        }
+        
+        .category-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 0.5em 1.5em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .category-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .category-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1em; }
+            .skills-grid { grid-template-columns: 1fr; }
+            .skill-categories { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 0.3em;">school</span>
+                Skills Studio
+            </div>
+            <div class="subtitle">AI Coaching Platform for Multiple Skills</div>
+        </div>
+        
+        <div class="skill-categories">
+            <button class="category-btn active" data-category="all">All Skills</button>
+            <button class="category-btn" data-category="music">🎸 Music</button>
+            <button class="category-btn" data-category="sports">🏃 Sports</button>
+            <button class="category-btn" data-category="arts">🎨 Arts</button>
+        </div>
+        
+        <div class="skills-grid" id="skillsGrid">
+            <!-- Skills will be loaded dynamically -->
+        </div>
+        
+        <div class="upload-section" id="uploadSection" style="display: none;">
+            <h2 id="selectedSkillTitle">Upload Video for Analysis</h2>
+            <p id="selectedSkillDescription">Upload a video of your technique for AI analysis and feedback.</p>
+            
+            <label class="upload-area" id="uploadArea">
+                <span class="material-icons" style="font-size: 3em; color: var(--primary); margin-bottom: 1em;">cloud_upload</span>
+                <div style="font-size: 1.2em; margin-bottom: 0.5em;">Click or drag video here</div>
+                <div style="color: var(--text-secondary);">Supports MP4, MOV, AVI formats</div>
+                <input type="file" id="videoUpload" accept="video/*">
+            </label>
+            
+            <div class="progress" id="progressBar" style="display: none;">
+                <div class="progress-bar" id="progressBarInner"></div>
+            </div>
+            
+            <button class="btn" id="analyzeBtn" style="display: none;">Analyze Technique</button>
+        </div>
+        
+        <div class="results" id="results" style="display: none;">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+    
+    <script>
+        const skills = [
+            {
+                id: 'guitar',
+                name: 'Guitar',
+                category: 'music',
+                icon: 'music_note',
+                description: 'Analyze chord formation, finger positioning, and strumming patterns'
+            },
+            {
+                id: 'piano',
+                name: 'Piano',
+                category: 'music',
+                icon: 'piano',
+                description: 'Analyze hand positioning, finger independence, and playing technique'
+            },
+            {
+                id: 'tennis',
+                name: 'Tennis',
+                category: 'sports',
+                icon: 'sports_tennis',
+                description: 'Analyze serve motion, grip, footwork, and overall technique'
+            },
+            {
+                id: 'drawing',
+                name: 'Drawing',
+                category: 'arts',
+                icon: 'brush',
+                description: 'Analyze line quality, perspective, shading techniques, and overall skills'
+            }
+        ];
+        
+        let selectedSkill = null;
+        let selectedCategory = 'all';
+        
+        function loadSkills() {
+            const grid = document.getElementById('skillsGrid');
+            grid.innerHTML = '';
+            
+            const filteredSkills = selectedCategory === 'all' 
+                ? skills 
+                : skills.filter(skill => skill.category === selectedCategory);
+            
+            filteredSkills.forEach(skill => {
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+                card.setAttribute('data-skill', skill.id);
+                card.innerHTML = `
+                    <span class="material-icons">${skill.icon}</span>
+                    <h3>${skill.name}</h3>
+                    <p>${skill.description}</p>
+                `;
+                card.addEventListener('click', () => selectSkill(skill));
+                grid.appendChild(card);
+            });
+        }
+        
+        function selectSkill(skill) {
+            selectedSkill = skill;
+            
+            // Update UI
+            document.querySelectorAll('.skill-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-skill="${skill.id}"]`).classList.add('selected');
+            
+            // Show upload section
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('selectedSkillTitle').textContent = `Upload ${skill.name} Video`;
+            document.getElementById('selectedSkillDescription').textContent = skill.description;
+            
+            // Scroll to upload section
+            document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function setupCategoryFilters() {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedCategory = btn.getAttribute('data-category');
+                    loadSkills();
+                });
+            });
+        }
+        
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('videoUpload');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = 'rgba(79, 140, 255, 0.1)';
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.background = '';
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '';
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleFileSelect();
+                }
+            });
+            
+            fileInput.addEventListener('change', handleFileSelect);
+            analyzeBtn.addEventListener('click', analyzeVideo);
+        }
+        
+        function handleFileSelect() {
+            const fileInput = document.getElementById('videoUpload');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            if (fileInput.files.length > 0) {
+                analyzeBtn.style.display = 'inline-block';
+                analyzeBtn.textContent = `Analyze ${selectedSkill.name} Technique`;
+            }
+        }
+        
+        async function analyzeVideo() {
+            if (!selectedSkill || !document.getElementById('videoUpload').files.length) return;
+            
+            const file = document.getElementById('videoUpload').files[0];
+            const formData = new FormData();
+            formData.append('video', file);
+            formData.append('skill_type', selectedSkill.id);
+            
+            // Show progress
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('analyzeBtn').textContent = 'Analyzing...';
+            
+            try {
+                const response = await fetch('http://localhost:5001/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                showResults(result);
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                alert('Analysis failed. Please try again.');
+            } finally {
+                document.getElementById('progressBar').style.display = 'none';
+                document.getElementById('analyzeBtn').disabled = false;
+                document.getElementById('analyzeBtn').textContent = `Analyze ${selectedSkill.name} Technique`;
+            }
+        }
+        
+        function showResults(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            
+            let html = '<h2>Analysis Results</h2>';
+            
+            if (data.metrics) {
+                const metric = data.metrics.chord || data.metrics.technique || data.metrics.stroke_type || 'Technique';
+                html += `<div style="margin: 1em 0; padding: 1em; background: #f8f9fa; border-radius: 8px;">
+                    <strong>Detected:</strong> ${metric}<br>
+                    <strong>Accuracy:</strong> ${data.metrics.accuracy}%
+                </div>`;
+            }
+            
+            if (data.coach) {
+                html += `<div style="margin: 1em 0; padding: 1em; background: #e8f5e8; border-radius: 8px;">
+                    <strong>Feedback:</strong> ${data.coach.feedback_text}
+                </div>`;
+            }
+            
+            if (data.metrics && data.metrics.flaws) {
+                html += '<div style="margin: 1em 0;"><strong>Areas to Improve:</strong><ul>';
+                data.metrics.flaws.forEach(flaw => {
+                    html += `<li><strong>${flaw.description}</strong><br>
+                        <em>${flaw.reason}</em><br>
+                        <span style="color: var(--success);">Tip: ${flaw.tip}</span></li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSkills();
+            setupCategoryFilters();
+            setupFileUpload();
+        });
+    </script>
+</body>
+</html> 

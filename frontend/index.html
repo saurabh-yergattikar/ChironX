@@ -178,11 +178,24 @@
 <body>
     <div class="container">
         <div class="logo"><span class="material-icons">music_note</span> ChironX</div>
-        <label class="upload-area" id="uploadArea">
+        
+        <!-- Simple file input -->
+        <div style="text-align: center; margin-bottom: 1.5em;">
+            <input type="file" id="videoUpload" accept="video/*" style="display: none;">
+            <button class="btn" id="selectFile" style="background: var(--accent); margin-bottom: 1em;">
+                <span class="material-icons" style="vertical-align:middle;">folder_open</span> Select Video File
+            </button>
+            <div style="color: var(--text-secondary); font-size: 0.9em;">
+                Or drag and drop a video file here
+            </div>
+        </div>
+        
+        <!-- Drag and drop area -->
+        <div class="upload-area" id="uploadArea" style="margin-top: 1em;">
             <span class="material-icons" style="font-size:1.5em;vertical-align:middle;">cloud_upload</span>
-            <span style="display:block;margin-top:0.5em;">Click or drag a video file here to analyze your guitar playing</span>
-            <input type="file" id="videoUpload" accept="video/*">
-        </label>
+            <span style="display:block;margin-top:0.5em;">Drag and drop your video file here</span>
+        </div>
+        
         <div class="actions">
             <button class="btn" id="startLive"><span class="material-icons" style="vertical-align:middle;">videocam</span> Start Live Mode</button>
         </div>
